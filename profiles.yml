@@ -1,0 +1,37 @@
+profiles:
+  proteus-5:
+    enable_builtin_filters: true
+    ffmpeg_filter_complex: "tvai_up=model=prob-4:scale=0:w=640:h=480:preblur=0:noise=0:\
+      details=0:halo=0:blur=0:compression=0:estimate=8:blend=0.05:device=0:vram=1:instances=1"
+    ffmpeg_metadata:
+      videoai: "Enhanced using prob-4; mode: auto; revert compression at 0;
+        recover details at 0; sharpen at 0; reduce noise at 0; dehalo at 0;
+        anti-alias/deblur at 0; focus fix Off; and recover original detail at 5."
+  iris-proteus:
+    enable_builtin_filters: true
+    ffmpeg_filter_complex: "tvai_up=model=iris-2:scale=1:preblur=0:noise=0:details=0:\
+      halo=0:blur=0:compression=0:estimate=8:blend=0.2:device=0:vram=1:instances=1,\
+      tvai_up=model=prob-4:scale=0:w=640:h=480:preblur=0:noise=0:details=0:halo=0:\
+      blur=0:compression=0:estimate=8:blend=0.2:device=0:vram=1:instances=1"
+    ffmpeg_metadata:
+      videoai: "Enhanced using iris-2; mode: auto; revert compression at 0; recover
+        details at 0; sharpen at 0; reduce noise at 0; dehalo at 0; anti-alias/deblur
+        at 0; focus fix Off; and recover original detail at 20.
+        Enhanced using prob-4; mode: auto; revert compression at 0; recover details
+        at 0; sharpen at 0; reduce noise at 0; dehalo at 0; anti-alias/deblur at 0;
+        focus fix Off; and recover original detail at 20."
+  iris-artemis:
+    enable_builtin_filters: true
+    ffmpeg_filter_complex: "tvai_up=model=iris-2:scale=1:preblur=0:noise=0:details=0:\
+      halo=0:blur=0:compression=0:estimate=8:blend=0.2:device=0:vram=1:instances=1,\
+      tvai_up=model=amq-13:scale=0:w=640:h=480:blend=0.2:device=0:vram=1:instances=1"
+    ffmpeg_metadata:
+      videoai: "Enhanced using iris-2; mode: auto; revert compression at 0; recover
+        details at 0; sharpen at 0; reduce noise at 0; dehalo at 0; anti-alias/deblur
+        at 0; focus fix Off; and recover original detail at 20.
+        Enhanced using amq-13; and recover original detail at 20."
+  ffmpeg-scale:
+    enable_builtin_filters: true
+    ffmpeg_filter_complex: ""
+    ffmpeg_metadata:
+      upscaleai: "Dummy preset for a simple ffmpeg scale filter"

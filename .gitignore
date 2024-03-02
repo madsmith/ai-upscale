@@ -1,0 +1,4 @@
+samples/
+output/
+myenv/
+__pycache__/
