@@ -1007,7 +1007,7 @@ def main():
     parser.add_argument("-d", dest='debug', default=0, action='store_const', const=1, help="Enable debug output (debug level 1)")
     parser.add_argument("--debug", default=0, type=arg_debug_level, help="Enable debug output at a specific verbosity")
     parser.add_argument("--ext", "--extension", dest="extension", help="File extensions to process [multiple extensions seperated by ',']", default=".mkv")
-    parser.add_argument("--open", action="store_true", help="Open the output folder after processing")
+    parser.add_argument("--open", action="store_true", help="Open the output file on completion")
     parser.add_argument("-o", "--output-dir", dest="output_dir", help="Output directory for processed files", default="output")
 
     parser_group = parser.add_argument_group("Output Settings")
