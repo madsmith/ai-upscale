@@ -173,7 +173,7 @@ class UpscaleJob:
                     log_step(f"Output file frame count mismatch, removing output file")
                     remove_file(self.output_file)
                 else:
-                    log_step(f"Skipping Completed Job: {str(self.file)} Existing Output: {str(self.output_file)}")
+                    log_step(f"Skipping Completed Job: {str(self.output_file)}")
                     return
 
 
