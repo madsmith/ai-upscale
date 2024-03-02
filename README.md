@@ -24,12 +24,12 @@ The ffmpeg encoding settings are tuned for an NVidia GPU for hardware encoding. 
 
  * [Topaz Video AI]
  * [MKVToolNix] (mkvextract / mkvmerge)
- * Python
+ * [Python]
  * Python YAML module
 
 ## Installation
 
-Install Topaz Video AI. This tool assumes the default install path is ```C:\Program Files\Topaz Labs LLC\Topaz Video AI``` and that the data files for the AI models is set to ```C:\ProgramData\Topaz Labs LLC\Topaz Video AI```
+Install [Topaz Video AI]. This tool assumes the default install path is ```C:\Program Files\Topaz Labs LLC\Topaz Video AI``` and that the data files for the AI models is set to ```C:\ProgramData\Topaz Labs LLC\Topaz Video AI```
 
 Run Topaz Video AI and login to your account.
 
@@ -90,7 +90,7 @@ Detailed Usage
       --debug DEBUG         Enable debug output at a specific verbosity
       --ext EXTENSION, --extension EXTENSION
                             File extensions to process [multiple extensions seperated by ',']
-      --open                Open the output folder after processing
+      --open                Open the output file on completion
       -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                             Output directory for processed files
 
