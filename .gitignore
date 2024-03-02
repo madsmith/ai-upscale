@@ -1,4 +1,5 @@
 samples/
+tmp/
 output/
 myenv/
 __pycache__/
