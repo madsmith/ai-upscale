@@ -537,7 +537,7 @@ class UpscaleJob:
         # Apply resolution scalar to target resolution
         scalers = {"1x": 1, "2x": 2, "4x": 4}
         if resolution_tag in scalers:
-            if get_globals("sar") == "square":
+            if get_globals("pix_fmt") == "square":
                 current_resolution = Resolution(int(round(current_resolution.width * sar.value())),
                                                 current_resolution.height)
 
@@ -567,7 +567,7 @@ class UpscaleJob:
             print(f"Adjusted Target Resolution: {target_resolution} @ {AspectRatio.from_resolution(target_resolution)}")
             print(f"Target Resolution Aspect Ratio: {target_resolution_aspect_ratio} Display Aspect Ratio: {dar} @ {target_resolution_aspect_ratio / dar}")
 
-        if (get_globals("sar") == "square"):
+        if (get_globals("pix_fmt") == "square"):
             if (target_resolution_aspect_ratio / dar) < 1.01 or get_globals("padding"):
                 return target_resolution
             else:
@@ -647,7 +647,7 @@ class UpscaleJob:
 
         # Prescale to display resolution
         filter_prescale = ""
-        if g_globals["sar"] == "square":
+        if g_globals["pix_fmt"] == "square":
             filter_prescale = f"scale=w={original_display_resolution.width}:h={original_display_resolution.height},setsar=1"
 
         # The below settings are specific for an NVidia GPU.  Topaz Labs documents
@@ -1025,7 +1025,7 @@ def main():
     parser_group.add_argument("-n", "--rename", action="store_true", help="Rename output files to indicate the upscale resolution")
     parser_group.add_argument("-r", "--resolution", dest="resolution", help="Resolution to target upscale [480, 720, 960, 1080, 1440, 2160, default=720]",
                               default="720", choices=["1x", "2x", "4x", "720", "1080", "1440", "2160"])
-    parser_group.add_argument("--sar", help="Set Source Aspect Ratio [source, square, default=square]", default="square", choices=["source", "square"])
+    parser_group.add_argument("--pf", "--pixel_format", dest="pix_fmt", help="Set pixel format (sample aspect ratio correction) [source, square, default=square]", default="square", choices=["source", "square"])
     parser_group.add_argument("-s", "--subfix", action="store_true", help="Fix subtitle rip issues, prefer SRT over VobSub and no default English track")
     parser_group.add_argument("-p", "--padding", action="store_true", help="Pad out video file to standard aspect ratio")
     parser_group.add_argument("--upscaler", help="Select upscaler model [artemis, proteus, default=proteus]", default="proteus", choices=["artemis", "proteus"])
@@ -1061,7 +1061,7 @@ def main():
         "output_dir": args.output_dir,
         "extension": args.extension,
         "resolution": args.resolution,
-        "sar": args.sar,
+        "pix_fmt": args.pix_fmt,
         "open": args.open,
         "subfix": args.subfix,
         "rename": args.rename,

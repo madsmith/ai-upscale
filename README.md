@@ -127,10 +127,10 @@ do not need to be specified in the ```ffmpeg_filter_complex``` setting, leaving 
 #### Detailed Usage ####
 
     python upscale-ai.py -h
-    usage: upscale-ai.py [-h] [-f] [-d] [--debug DEBUG] [--ext EXTENSION] [--open] [-o OUTPUT_DIR] [-n] [-r {1x,2x,4x,720,1080,1440,2160}] [--sar {source,square}]
-                        [-s] [-p] [--upscaler {artemis,proteus}] [--upscaler-profile UPSCALER_PROFILE] [--ff:qp FF_QP] [-tvai TVAI_PATH] [-tvaidata TVAI_DATA_PATH]
-                        [--mkvtoolnix MKVTOOLNIX_PATH]
-                        [files ...]
+    usage: upscale-ai.py [-h] [-f] [-d] [--debug DEBUG] [--ext EXTENSION] [--open] [-o OUTPUT_DIR] [-n] [-r {1x,2x,4x,720,1080,1440,2160}]
+                         [--pf {source,square}] [-s] [-p] [--upscaler {artemis,proteus}] [--upscaler-profile UPSCALER_PROFILE] [--ff:qp FF_QP]
+                         [-tvai TVAI_PATH] [-tvaidata TVAI_DATA_PATH] [--mkvtoolnix MKVTOOLNIX_PATH]
+                         [files ...]
 
     Upconvert Video
 
@@ -152,8 +152,8 @@ do not need to be specified in the ```ffmpeg_filter_complex``` setting, leaving 
       -n, --rename          Rename output files to indicate the upscale resolution
       -r {1x,2x,4x,720,1080,1440,2160}, --resolution {1x,2x,4x,720,1080,1440,2160}
                             Resolution to target upscale [480, 720, 960, 1080, 1440, 2160, default=720]
-      --sar {source,square}
-                            Set Source Aspect Ratio [source, square, default=square]
+      --pf {source,square}, --pixel_format {source,square}
+                            Set pixel format (sample aspect ratio correction) [source, square, default=square]
       -s, --subfix          Fix subtitle rip issues, prefer SRT over VobSub and no default English track
       -p, --padding         Pad out video file to standard aspect ratio
       --upscaler {artemis,proteus}
