@@ -911,6 +911,9 @@ def process_file(file):
         print(traceback.format_exc())
 
 def process_folder(folder):
+    if debug_check(LVL_INFO):
+        print(f"Processing Folder: {folder}")
+
     # Get extensions, adding prefix if necessary
     extensions = [ext if ext.startswith(".") else f".{ext}" for ext in get_globals("extension").split(",")]
 
@@ -922,6 +925,11 @@ def process_folder(folder):
     for file in all_videos:
         # Process the file
         process_file(file)
+
+    # Recurse into subdirectories
+    for subfolder in folder.iterdir():
+        if subfolder.is_dir():
+            process_folder(subfolder)
 
 def validate_environment():
     # Validate topaz video ai is installed
