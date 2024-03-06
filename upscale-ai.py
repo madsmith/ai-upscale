@@ -580,14 +580,19 @@ class UpscaleJob:
         if video_stream is None:
             raise Exception("No video stream found")
 
-        width = video_stream["width"]
-        height = video_stream["height"]
+        current_resolution = Resolution(video_stream["width"], video_stream["height"])
 
         # Scale width and height to display aspect ratio
         sar = AspectRatio.from_string(video_stream["sample_aspect_ratio"])
-        display_width = int(round(width * sar.value()))
+        display_width = int(round(current_resolution.width * sar.value()))
+        display_resolution = Resolution(display_width, current_resolution.height)
 
-        return (Resolution(width, height), Resolution(display_width, height))
+        if debug_check(LVL_DEBUG):
+            print(f"Video Resolution: {current_resolution}")
+            print(f"SAR: {sar}")
+            print(f"Display Resolution: {display_resolution}")
+
+        return (current_resolution, display_resolution)
 
     def _load_profile_data(self, profile_name):
         if profile_name == "default":
