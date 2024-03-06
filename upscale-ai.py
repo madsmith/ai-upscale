@@ -303,6 +303,7 @@ class UpscaleJob:
         print("      Job Starting...", end="\r", flush=True)
         job_status_pattern = re.compile(r"^frame=\s*(\d+)\s+fps= *([\d.]+) .*size= *([^ ]+)")
         last_line_length = 0
+        job_output = []
         while True:
             output_line = process.stdout.readline()
             if not output_line:
@@ -325,6 +326,7 @@ class UpscaleJob:
                 print(render_line, end="\r", flush=True)
                 last_line_length = new_line_length
             else:
+                job_output.append(output_line)
                 if debug_check(LVL_DEBUG):
                     print(f"{output_line}", end="")
 
@@ -334,8 +336,9 @@ class UpscaleJob:
         print(" " * last_line_length, end="\r", flush=True)
         if return_code != 0:
             remove_file(self.intermediate_file)
-            print(process.stdout.read().decode('utf-8'))
-            raise Exception(f"Upscale failed: {return_code}")
+            msg = ("Upscale Job Failed: [ffmpeg output]" + os.linesep + "  "
+                + "  ".join(job_output[-10:]))
+            raise Exception(msg)
         else:
             log_step("Upscale complete")
 
