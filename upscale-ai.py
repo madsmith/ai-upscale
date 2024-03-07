@@ -42,11 +42,31 @@ class Resolution:
             raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
 
     def __mul__(self, other):
-        return Resolution(self.width * other, self.height * other)
+        if isinstance(other, int):
+            return Resolution(self.width * other, self.height * other)
+        elif isinstance(other, float):
+            raise Exception("Multiplication of Resolution by float not supported")
+        elif isinstance(other, AspectRatio):
+            # Generally, I'm assuming that height is well known and the width is the
+            # dimension that needs to be scaled.  This may not result in the closest
+            # match to the display aspect ratio but I don't want to introduce more
+            # pixel interpolation than necessary.
+            new_width = self.width * other.width // other.height
+            # TODO: determine if we want to force route to an even value
+            #new_width = self._round_even(self.width * other.width / other.height)
+            return Resolution(new_width, self.height)
 
     def __rmul__(self, other):
         # This ensures multiplication works in both orders: scalar * Resolution and Resolution * scalar
         return self.__mul__(other)
+
+    def _round_even(self, value):
+        rounded_value = round(value)
+
+        if rounded_value % 2 == 0:
+            return rounded_value
+        else:
+            return rounded_value + 1 if value > rounded_value else rounded_value - 1
 
     def __str__(self):
         return f"{self.width}x{self.height}"
@@ -80,8 +100,18 @@ class AspectRatio:
             return self.value() / other.value()
         return NotImplemented
 
+    # Equality of two aspect ratios
+    def __eq__(self, other):
+        if isinstance(other, AspectRatio):
+            return ((self.width//self._divisor) == (other.width//other._divisor) and
+                    (self.height//self._divisor) == (other.height//other._divisor))
+        return NotImplemented
+
     def __str__(self):
-        return f"{(int)(self.width/self._divisor)}:{int(self.height/self._divisor)}"
+        str_value = f"{(self.width//self._divisor)}:{(self.height//self._divisor)}"
+        if (len(str_value) > 5):
+            str_value = f"{str_value} [{(self.width/self.height):.4f}]"
+        return str_value
 
 class Packet:
     def __init__(self, probe_data, time_base):
@@ -512,11 +542,7 @@ class UpscaleJob:
 
         return stream_options
 
-    def _get_output_resolution(self):
-        video_stream = next((stream for stream in self.probe_data["streams"] if stream["codec_type"] == "video"), None)
-        if video_stream is None:
-            raise Exception("No video stream found")
-
+    def _get_output_resolution(self, video_stream):
         current_resolution = Resolution(video_stream["width"], video_stream["height"])
         target_resolution = current_resolution
         dar = AspectRatio.from_string(video_stream["display_aspect_ratio"])
@@ -531,7 +557,7 @@ class UpscaleJob:
 
         resolution_tag = get_globals("resolution")
 
-        if debug_check(LVL_DEBUG):
+        if debug_check(LVL_TRACE):
             print(f"Video Stream: {json.dumps(self.probe_data['streams'][0], indent=2)}")
 
         # Apply resolution scalar to target resolution
@@ -575,22 +601,22 @@ class UpscaleJob:
         else:
             return target_resolution
 
-    def _get_input_display_resolutions(self):
-        video_stream = next((stream for stream in self.probe_data["streams"] if stream["codec_type"] == "video"), None)
-        if video_stream is None:
-            raise Exception("No video stream found")
-
+    def _get_input_display_resolutions(self, video_stream):
         current_resolution = Resolution(video_stream["width"], video_stream["height"])
 
         # Scale width and height to display aspect ratio
         sar = AspectRatio.from_string(video_stream["sample_aspect_ratio"])
-        display_width = int(round(current_resolution.width * sar.value()))
-        display_resolution = Resolution(display_width, current_resolution.height)
+        display_resolution = current_resolution * sar
 
         if debug_check(LVL_DEBUG):
+            display_resolution_aspect_ratio = AspectRatio.from_resolution(display_resolution)
+            video_display_aspect_ratio = AspectRatio.from_string(video_stream["display_aspect_ratio"])
             print(f"Video Resolution: {current_resolution}")
             print(f"SAR: {sar}")
             print(f"Display Resolution: {display_resolution}")
+            print(f"Display Resolution Aspect Ratio: {display_resolution_aspect_ratio}")
+            print(f"Video Display Aspect Ratio: {video_display_aspect_ratio}")
+            print(display_resolution_aspect_ratio == video_display_aspect_ratio)
 
         return (current_resolution, display_resolution)
 
@@ -639,8 +665,12 @@ class UpscaleJob:
         env['TVAI_MODEL_DATA_DIR'] = str(get_tvai_data_path())
         env['TVAI_MODEL_DIR'] = str(get_tvai_data_path() / "models")
 
-        output_resolution = self._get_output_resolution()
-        original_resolution, original_display_resolution = self._get_input_display_resolutions()
+        video_stream = next((stream for stream in self.probe_data["streams"] if stream["codec_type"] == "video"), None)
+        if video_stream is None:
+            raise Exception("No video stream found")
+
+        output_resolution = self._get_output_resolution(video_stream)
+        original_resolution, original_display_resolution = self._get_input_display_resolutions(video_stream)
 
         ffmpeg_options = ["-hide_banner", "-y"]
         color_options = ["-color_trc", "2", "-colorspace", "0", "-color_primaries", "6"]
@@ -653,6 +683,17 @@ class UpscaleJob:
         # Prescale to display resolution
         filter_prescale = ""
         if g_globals["pix_fmt"] == "square":
+            # Sanity check display resolution matches display aspect ratio
+            display_res_ar = AspectRatio.from_resolution(original_display_resolution)
+            display_ar = AspectRatio.from_string(video_stream["display_aspect_ratio"])
+            if (display_res_ar != display_ar and not get_globals("padding")):
+                if debug_check(LVL_DEBUG):
+                    print(f"Display Aspect Ratio Mismatch: {original_display_resolution} [{display_res_ar}] vs {display_ar}")
+                # Scale original_display_resolution to multiple of display_ar
+                scalar = round(original_display_resolution.width / display_ar.width)
+                original_display_resolution = Resolution(display_ar.width * scalar, display_ar.height * scalar)
+
+
             filter_prescale = f"scale=w={original_display_resolution.width}:h={original_display_resolution.height},setsar=1"
 
         # The below settings are specific for an NVidia GPU.  Topaz Labs documents
