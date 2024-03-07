@@ -354,7 +354,9 @@ class UpscaleJob:
         # Pretty print json probe_data
         #print(json.dumps(self.probe_data["streams"], indent=2))
 
-        # TODO: can't copy mov_text subtitles to mkv
+        output_filename = self._get_output_filename()
+        is_mkv = output_filename.endswith(".mkv")
+
         streams = self.probe_data["streams"]
         subtitle_streams = [stream for stream in streams if stream['codec_type'] == "subtitle"]
         subtitle_stream_in_map = {stream['index']: pos for pos, stream in enumerate(subtitle_streams)}
@@ -409,6 +411,9 @@ class UpscaleJob:
                     if type_abbr == "s" and get_globals("subfix"):
                         if stream["disposition"] and stream["disposition"]["default"]:
                             stream_options.extend([f"-disposition:s:{out_idx}", "0"])
+
+                    if is_mkv and type_abbr == "s" and stream["codec_name"] == "mov_text":
+                        stream_options.extend([f"-c:s:{out_idx}", "srt"])
 
                     # Output stream was mapped, increment the output stream index
                     output_state[type_abbr]['out'] += 1
