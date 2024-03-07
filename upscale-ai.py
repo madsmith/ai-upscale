@@ -35,18 +35,31 @@ class UpscaleJob:
         self.probe_data = None
 
     def _determine_output_file(self):
+        output_filename = self._get_output_filename()
         if get_globals("rename"):
-            extension = self.file.suffix
             resolution = get_globals("resolution")
+
             # If file contains [] tag, then replace than tag appropriately
-            tag = re.match(r".*\[([^\]]+)\][^\[]*", self.filename)
+            tag = re.match(r".*\[([^\]]+)\][^\[]*", output_filename)
             if tag:
                 # Replace DVD or DVDRip with resolution
                 quality_tag = f"{resolution}p AI Upscale"
                 new_tag = re.sub(r"DVD(Rip)?", quality_tag, tag.group(1), flags=re.IGNORECASE)
-                return get_output_directory() / f"{self.filename.replace(tag.group(1), new_tag)}"
-            return get_output_directory() / f"{self.filename.replace(extension, f'-{resolution}{extension}')}"
-        return get_output_directory() / self.filename
+                return get_output_directory() / f"{output_filename.replace(tag.group(1), new_tag)}"
+            else:
+                extension = Path(output_filename).suffix
+                return get_output_directory() / f"{output_filename.replace(extension, f'-{resolution}{extension}')}"
+        return get_output_directory() / output_filename
+
+    def _get_output_filename(self):
+        extension = get_globals("output_extension")
+        if extension == "inherit":
+            extension = self.file.suffix
+        else:
+            if not extension.startswith("."):
+                extension = f".{extension}"
+
+        return Path(self.filename).stem + extension
 
     def process(self):
         log_job(f"Processing file: {str(self.file)}")
@@ -175,7 +188,7 @@ class UpscaleJob:
         upscale_folder = self.working_dir / "upscaled"
         ensure_folder_exists(upscale_folder)
 
-        self.intermediate_file = upscale_folder / self.filename
+        self.intermediate_file = upscale_folder / self._get_output_filename()
 
         if self.intermediate_file.exists() and not get_globals("force"):
             if self.intermediate_file.stat().st_size == 0:
@@ -926,6 +939,7 @@ def main():
     parser.add_argument("-d", dest='debug', default=0, action='store_const', const=1, help="Enable debug output (debug level 1)")
     parser.add_argument("--debug", default=0, type=arg_debug_level, help="Enable debug output at a specific verbosity")
     parser.add_argument("--ext", "--extension", dest="extension", help="File extensions to process [multiple extensions seperated by ',']", default=".mkv")
+    parser.add_argument("--out_ext", "--output-extension", dest="output_extension", help="Output file extension [default=inherit]", default="inherit")
     parser.add_argument("--open", action="store_true", help="Open the output file on completion")
     parser.add_argument("-o", "--output-dir", dest="output_dir", help="Output directory for processed files", default="output")
 
@@ -967,6 +981,7 @@ def main():
         "force": args.force,
         "debug": args.debug,
         "output_dir": args.output_dir,
+        "output_extension": args.output_extension,
         "extension": args.extension,
         "resolution": args.resolution,
         "pix_fmt": args.pix_fmt,
