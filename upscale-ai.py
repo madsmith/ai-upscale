@@ -42,9 +42,19 @@ class UpscaleJob:
             # If file contains [] tag, then replace than tag appropriately
             tag = re.match(r".*\[([^\]]+)\][^\[]*", output_filename)
             if tag:
-                # Replace DVD or DVDRip with resolution
-                quality_tag = f"{resolution}p AI Upscale"
-                new_tag = re.sub(r"DVD(Rip)?", quality_tag, tag.group(1), flags=re.IGNORECASE)
+                new_tag = tag.group(1)
+                added_resolution = False
+                if re.match(r"\d{3,4}[ip]", new_tag):
+                    # Replace resolution tag with new resolution
+                    new_tag = re.sub(r"\d{3,4}[ip]", f"{resolution}p", new_tag)
+                    added_resolution = True
+
+                if added_resolution:
+                    quality_tag = f"AI Upscale"
+                else:
+                    quality_tag = f"{resolution}p AI Upscale"
+
+                new_tag = re.sub(r"DVD(Rip)?|Web(Rip|DL)", quality_tag, tag.group(1), flags=re.IGNORECASE)
                 return get_output_directory() / f"{output_filename.replace(tag.group(1), new_tag)}"
             else:
                 extension = Path(output_filename).suffix
